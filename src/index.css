@@ -1,0 +1,16 @@
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Anton", sans-serif;
+  
+  --color-caceres-blue: #1E3A8A; /* blue-900 */
+  --color-caceres-red: #DC2626; /* red-600 */
+  --color-caceres-yellow: #FACC15; /* yellow-400 */
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: #f8fafc;
+}

@@ -1,0 +1,46 @@
+# Dependencias
+node_modules/
+
+# Builds
+build/
+dist/
+
+# Tests
+coverage/
+
+# Entornos y Variables (¡Muy importante!)
+.env
+.env.*
+!.env.example
+
+# Archivos de Sistema Operativo
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editores / IDEs
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+
+# Credenciales de Google Cloud (Que usaremos para Vertex AI)
+*.json
+!package.json
+!tsconfig.json
+!tsconfig.node.json
+!tsconfig.app.json
+!metadata.json
+service-account*.json
+*credentials*.json
+*-key.json
+
+# Archivos temporales o de prueba
+test-gemini.ts
+test-*.*
+
+# Carpetas de subidas locales (por si guardamos imagenes en el backend temporalmente)
+uploads/
