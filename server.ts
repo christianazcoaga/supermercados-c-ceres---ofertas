@@ -1,8 +1,9 @@
 import express from 'express';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import FormData from 'form-data';
+import fetch from 'node-fetch';
 
 dotenv.config();
 
@@ -16,10 +17,6 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // Serve static files from dist
 app.use(express.static(path.join(__dirname, 'dist')));
 
-const genAI = new GoogleGenerativeAI(
-  process.env.GOOGLE_API_KEY || ''
-);
-
 interface GenerateRequest {
   imageBase64: string;
   prompt?: string;
@@ -30,97 +27,72 @@ app.post('/api/generate-product-image', async (req: express.Request<{}, {}, Gene
     const { imageBase64, prompt } = req.body;
 
     if (!imageBase64) {
-      return res.status(400).json({ error: 'No image provided' });
+      res.status(400).json({ error: 'No image provided' });
+      return;
     }
 
-    // Use custom prompt or default
-    const userPrompt = prompt || 'Haz que este producto se vea profesional, de alta calidad, listo para catálogo e-commerce';
+    const userPrompt = prompt || 'Genera una imagen profesional de catálogo de este producto. Fondo blanco de estudio, iluminación perfecta, sin distracciones, alta resolución.';
+    console.log(`Pidiendo imagen a Photoroom API... Prompt: "${userPrompt}"`);
 
-    // For now, return an enhanced analysis based on the custom prompt
-    const analysisText = `
-Análisis Profesional del Producto
-==================================
+    // Remove base64 prefix
+    const base64Data = imageBase64.replace(/^data:image\/(png|jpeg|jpg);base64,/, "");
+    // Convert base64 to buffer
+    const imageBuffer = Buffer.from(base64Data, 'base64');
 
-Instrucción personalizada: "${userPrompt}"
+    // Create form-data
+    const formData = new FormData();
+    formData.append('imageFile', imageBuffer, { filename: 'product.jpg', contentType: 'image/jpeg' });
+    
+    // Forzar fondo 100% blanco estándar en lugar de un prompt inventado por la IA
+    formData.append('background.color', '#FFFFFF');
+    
+    // (Opcional) Podemos agregar una sombra IA suave para que el producto no parezca "flotando" y quede más profesional
+    // formData.append('shadow.mode', 'ai.soft'); 
+    
+    // Un poco de margen/padding del 10% alrededor para que el producto no toque los bordes
+    formData.append('padding', '0.1');
 
-Recomendaciones de Mejora:
---------------------------
+    const photoroomKey = process.env.PHOTOROOM_API_KEY;
 
-1. CAPTURA Y COMPOSICIÓN:
-   - Ángulo: Captura desde múltiples ángulos (45°, frontal, lateral)
-   - Resolución: Mínimo 2048x2048px para calidad de catálogo
-   - Proporción: Formato cuadrado 1:1 para redes sociales
+    if (!photoroomKey) {
+      throw new Error("PHOTOROOM_API_KEY no está configurada en el archivo .env");
+    }
 
-2. ILUMINACIÓN PROFESIONAL:
-   - Setup de 3 puntos: luz clave, luz de relleno, contraluz
-   - Temperatura color: 5000K (luz diurna equilibrada)
-   - Softbox o difusor para luz suave y sin sombras duras
-   - Reflectores para iluminar las sombras
-
-3. FONDO Y AMBIENTE:
-   - Fondo: Blanco limpio, gris neutro o gradiente sutil
-   - Superficie: Espejo, cristal limpio o material texturado
-   - Profundidad: Usa el fondo desenfocado (bokeh) para destacar el producto
-
-4. POST-PROCESAMIENTO:
-   - Corrección de color para precisión del producto
-   - Aumento de contraste y nitidez
-   - Eliminación de sombras no deseadas
-   - Ajuste de saturación (natural, sin exagerar)
-   - Optimización para web (compresión inteligente)
-
-5. DETALLES ESPECIALES:
-   - Reflejo del producto si aplica
-   - Líneas de luz para resaltar texturas
-   - Sombra sutil para tridimensionalidad
-   - Viñeta suave para dirigir la atención
-
-📊 FORMATO FINAL RECOMENDADO:
-- Tamaño: 2048x2048px (mínimo 1024x1024px)
-- Formato: JPG (para web) o PNG (si necesita transparencia)
-- Color: sRGB para consistencia web
-- Compresión: 80-90% de calidad para balance tamaño/calidad
-
-🎯 OBJETIVO ALCANZADO:
-Con estos ajustes, tu producto estará listo para:
-✓ E-commerce profesional
-✓ Redes sociales
-✓ Catálogos impresos (alta resolución)
-✓ Publicidad digital
-
-Próximo paso: Implementa estas recomendaciones o sube nuevamente con estos ajustes aplicados.
-    `;
-
-    return res.json({
-      success: true,
-      analysis: analysisText,
-      imageUrl: null,
-      message: 'Análisis profesional completado basándose en tus instrucciones.',
+    // Call Photoroom v2 API
+    const response = await fetch('https://image-api.photoroom.com/v2/edit', { // Using Photoroom API endpoint
+      method: 'POST',
+      headers: {
+        'x-api-key': photoroomKey,
+      },
+      body: formData
     });
-  } catch (error) {
-    console.error('Error:', error);
-    
-    // Handle specific error types
-    if (error instanceof Error) {
-      if (error.message.includes('429') || error.message.includes('quota')) {
-        return res.status(429).json({
-          error: 'Cuota de API excedida',
-          details: 'Se ha excedido el límite de solicitudes. Por favor intenta más tarde o actualiza tu plan.',
-          message: error.message,
-        });
-      }
-      if (error.message.includes('401') || error.message.includes('unauthorized')) {
-        return res.status(401).json({
-          error: 'API Key inválida o no configurada',
-          details: 'Verifica que tu GOOGLE_API_KEY sea correcta en el archivo .env',
-        });
-      }
+
+    if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Photoroom Error:", errorText);
+        throw new Error(`Error de Photoroom: ${response.status} - ${errorText}`);
     }
+
+    // Photoroom usually returns the raw image buffer instead of a JSON.
+    const imageResultBuffer = await response.arrayBuffer();
+    const finalImageUrl = `data:image/jpeg;base64,${Buffer.from(imageResultBuffer).toString('base64')}`;
+
+    res.json({
+      success: true,
+      analysis: null,
+      imageUrl: finalImageUrl,
+      message: '¡Imagen generada exitosamente por Photoroom!',
+    });
+    return;
+  } catch (error) {
+    console.error('Error Photoroom:', error);
     
-    return res.status(500).json({
-      error: 'Error al procesar la imagen',
+    // Fallback error handling
+    res.status(500).json({
+      error: 'Error interno del servidor al procesar la imagen.',
       details: error instanceof Error ? error.message : 'Error desconocido',
     });
+    return;
   }
 });
 
@@ -129,7 +101,7 @@ app.get('*', (req: express.Request, res: express.Response) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

@@ -421,15 +421,7 @@ export default function App() {
                   <ul className="space-y-2">
                     <li className="flex items-start gap-2">
                       <div className="w-2 h-2 rounded-full bg-caceres-yellow mt-2"></div>
-                      <span>Más de 27 sucursales en Formosa, Chaco, Corrientes y Misiones.</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <div className="w-2 h-2 rounded-full bg-caceres-yellow mt-2"></div>
-                      <span>Propietarios de cadena Impulso y accionistas de California.</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <div className="w-2 h-2 rounded-full bg-caceres-yellow mt-2"></div>
-                      <span>Uno de los principales empleadores privados de la provincia.</span>
+                      <span>9 sucursales en Formosa Capital.</span>
                     </li>
                   </ul>
                 </div>
