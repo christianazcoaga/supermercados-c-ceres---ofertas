@@ -243,7 +243,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans selection:bg-caceres-yellow selection:text-caceres-blue">
+    <div className="min-h-screen bg-slate-50 font-sans selection:bg-caceres-yellow selection:text-caceres-blue overflow-x-hidden">
       {/* Top Bar */}
       <motion.div 
         initial={{ y: -50 }}
@@ -271,7 +271,7 @@ export default function App() {
         className="bg-white shadow-md sticky top-0 z-40 border-b-4 border-caceres-red"
       >
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <img src="/LOGO.png" alt="Grupo Cáceres" className="h-24 w-48 object-fill ml-6 transform scale-[1.8] origin-left" />
+          <img src="/LOGO.png" alt="Grupo Cáceres" className="h-16 w-48 object-contain md:h-24 md:w-48 md:ml-6 md:scale-[1.8] md:origin-left md:object-fill" />
           <nav className="hidden md:flex gap-6 font-bold text-slate-700 uppercase tracking-wide text-sm">
             <a href="#ofertas" className="text-caceres-red hover:text-caceres-blue transition-colors flex items-center gap-1">
               <Tag size={16} /> Ofertas Semanales
