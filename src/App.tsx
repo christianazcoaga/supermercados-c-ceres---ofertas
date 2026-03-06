@@ -177,8 +177,9 @@ export default function App() {
     
     setIsGenerating(true);
     setError(null);
+    const apiBase = import.meta.env.VITE_API_URL || '';
     try {
-      const response = await fetch('/api/generate-product-image', {
+      const response = await fetch(`${apiBase}/api/generate-product-image`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
