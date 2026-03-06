@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion } from 'motion/react';
-import { MapPin, Clock, ShoppingCart, Tag, ChevronRight, Info, AlertCircle, Percent, Phone, Mail, Camera, Image as ImageIcon, Upload, Download } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { MapPin, Clock, ShoppingCart, Tag, ChevronRight, Info, AlertCircle, Percent, Phone, Mail, Camera, Image as ImageIcon, Upload, Download, Menu, X } from 'lucide-react';
 
 const OFERTAS = [
   {
@@ -93,6 +93,7 @@ const SUCURSALES = [
 ];
 
 export default function App() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [timeLeft, setTimeLeft] = useState({ days: 15, hours: 10, minutes: 30, seconds: 0 });
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
@@ -242,18 +243,57 @@ export default function App() {
         className="bg-white shadow-md sticky top-0 z-40 border-b-4 border-caceres-red"
       >
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <img src="/LOGO.png" alt="Grupo Cáceres" className="h-24 w-24 object-contain ml-6" />
+          <img src="/LOGO.png" alt="Grupo Cáceres" className="h-24 w-48 object-fill ml-6 transform scale-[1.8] origin-left" />
           <nav className="hidden md:flex gap-6 font-bold text-slate-700 uppercase tracking-wide text-sm">
             <a href="#ofertas" className="text-caceres-red hover:text-caceres-blue transition-colors flex items-center gap-1">
-              <Tag size={16} /> Ofertas del Mes
+              <Tag size={16} /> Ofertas Semanales
             </a>
             <a href="#sucursales" className="hover:text-caceres-blue transition-colors">Sucursales</a>
             <a href="#historia" className="hover:text-caceres-blue transition-colors">Nuestra Historia</a>
           </nav>
-          <button className="md:hidden text-caceres-blue">
-            <ShoppingCart size={28} />
+          <button 
+            className="md:hidden text-caceres-blue mr-4"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            {isMobileMenuOpen ? <X size={32} /> : <Menu size={32} />}
           </button>
         </div>
+
+        {/* Mobile Navigation Dropdown */}
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="md:hidden bg-white border-t border-slate-100 overflow-hidden"
+            >
+              <nav className="flex flex-col font-bold text-slate-700 uppercase tracking-wide text-sm">
+                <a 
+                  href="#ofertas" 
+                  className="px-6 py-4 border-b border-slate-100 text-caceres-red flex items-center gap-2 hover:bg-slate-50"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <Tag size={16} /> Ofertas Semanales
+                </a>
+                <a 
+                  href="#sucursales" 
+                  className="px-6 py-4 border-b border-slate-100 hover:bg-slate-50 hover:text-caceres-blue"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Sucursales
+                </a>
+                <a 
+                  href="#historia" 
+                  className="px-6 py-4 hover:bg-slate-50 hover:text-caceres-blue"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Nuestra Historia
+                </a>
+              </nav>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.header>
 
       {/* Hero Section - OFERTAS DEL MES */}
@@ -279,8 +319,17 @@ export default function App() {
             transition={{ delay: 0.2, duration: 0.5 }}
             className="text-6xl md:text-8xl lg:text-9xl font-display text-white uppercase tracking-tighter leading-none mb-4 drop-shadow-2xl"
           >
-            Ofertas <br/><span className="text-caceres-yellow">del Mes</span>
+            Ofertas <br/><span className="text-caceres-yellow">Semanales</span>
           </motion.h2>
+
+          <motion.p 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="text-white text-xl md:text-3xl font-bold mb-10 max-w-3xl mx-auto"
+          >
+            Del 03/03/2026 al 09/03/2026
+          </motion.p>
           
           <motion.p 
             initial={{ opacity: 0 }}
@@ -745,7 +794,7 @@ export default function App() {
             <div>
               <h3 className="text-white font-bold uppercase tracking-wider mb-6">Enlaces Rápidos</h3>
               <ul className="space-y-3">
-                <li><a href="#ofertas" className="hover:text-caceres-yellow transition-colors">Ofertas del Mes</a></li>
+                <li><a href="#ofertas" className="hover:text-caceres-yellow transition-colors">Ofertas Semanales</a></li>
                 <li><a href="#sucursales" className="hover:text-caceres-yellow transition-colors">Sucursales</a></li>
                 <li><a href="#historia" className="hover:text-caceres-yellow transition-colors">Nuestra Historia</a></li>
                 <li><a href="#" className="hover:text-caceres-yellow transition-colors">Trabajá con nosotros</a></li>
@@ -763,10 +812,6 @@ export default function App() {
                   <Mail className="text-caceres-yellow" size={20} />
                   <span>contacto@grupocaceres.com.ar</span>
                 </li>
-                <li className="flex items-start gap-3">
-                  <AlertCircle className="text-caceres-yellow shrink-0 mt-1" size={20} />
-                  <span className="text-sm">Participamos en programas de precios acordados con el gobierno provincial.</span>
-                </li>
               </ul>
             </div>
           </div>
@@ -777,6 +822,21 @@ export default function App() {
           </div>
         </motion.div>
       </footer>
+
+      {/* Floating WhatsApp Button */}
+      <a
+        href="https://wa.me/5493704239621"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-6 right-6 z-50 group transition-transform hover:scale-110"
+        aria-label="Contactar por WhatsApp"
+      >
+        <div className="flex-shrink-0 w-16 h-16 flex items-center justify-center rounded-full group-hover:rounded-[25px] bg-[#25D366] group-hover:bg-[#00d34d] shadow-lg shadow-green-500/30 transition-all duration-300">
+          <svg className="block w-8 h-8 text-white" viewBox="0 0 509 512" fill="currentColor" aria-hidden="true">
+            <path d="M259.253137,0.00180389396 C121.502859,0.00180389396 9.83730687,111.662896 9.83730687,249.413175 C9.83730687,296.530232 22.9142299,340.597122 45.6254897,378.191325 L0.613226597,512.001804 L138.700183,467.787757C174.430395,487.549184 215.522926,498.811168 259.253137,498.811168 C396.994498,498.811168 508.660049,387.154535 508.660049,249.415405 C508.662279,111.662896 396.996727,0.00180389396 259.253137,0.00180389396 Z M259.253137,459.089875 C216.65782,459.089875 176.998957,446.313956 143.886359,424.41206 L63.3044195,450.21808 L89.4939401,372.345171 C64.3924908,337.776609 49.5608297,295.299463 49.5608297,249.406486 C49.5608297,133.783298 143.627719,39.7186378 259.253137,39.7186378 C374.871867,39.7186378 468.940986,133.783298 468.940986,249.406486 C468.940986,365.025215 374.874096,459.089875 259.253137,459.089875 Z M200.755924,146.247066 C196.715791,136.510165 193.62103,136.180176 187.380228,135.883632 C185.239759,135.781068 182.918689,135.682963 180.379113,135.682963 C172.338979,135.682963 164.002301,138.050856 158.97889,143.19021 C152.865178,149.44439 137.578667,164.09322 137.578667,194.171258 C137.578667,224.253755 159.487251,253.321759 162.539648,257.402027 C165.600963,261.477835 205.268745,324.111057 266.985579,349.682963 C315.157262,369.636141 329.460495,367.859106 340.450462,365.455539 C356.441543,361.9639 376.521811,350.186865 381.616571,335.917077 C386.711331,321.63837 386.711331,309.399797 385.184018,306.857991 C383.654475,304.305037 379.578667,302.782183 373.464955,299.716408 C367.351242,296.659552 337.288812,281.870254 331.68569,279.83458 C326.080339,277.796676 320.898622,278.418749 316.5887,284.378615 C310.639982,292.612729 304.918689,301.074268 300.180674,306.09099 C296.46161,310.02856 290.477218,310.577055 285.331175,308.389764 C278.564174,305.506821 259.516237,298.869139 236.160607,278.048627 C217.988923,261.847958 205.716906,241.83458 202.149458,235.711949 C198.582011,229.598236 201.835077,225.948292 204.584241,222.621648 C207.719135,218.824546 210.610997,216.097679 213.667853,212.532462 C216.724709,208.960555 218.432625,207.05866 220.470529,202.973933 C222.508433,198.898125 221.137195,194.690767 219.607652,191.629452 C218.07588,188.568136 205.835077,158.494558 200.755924,146.247066 Z"></path>
+          </svg>
+        </div>
+      </a>
     </div>
   );
 }
