@@ -105,6 +105,7 @@ export default function App() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -129,17 +130,43 @@ export default function App() {
     return () => clearInterval(timer);
   }, []);
 
-  const startCamera = async () => {
-    try {
-      setError(null);
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-      setShowCamera(true);
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
-    } catch (err) {
-      setError('No se pudo acceder a la cámara');
+  useEffect(() => {
+    if (showCamera && videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
     }
+  }, [showCamera]);
+
+  const startCamera = async () => {
+    setError(null);
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setError('La cámara requiere HTTPS. En mobile, accedé via https:// o usá ngrok para pruebas locales.');
+      return;
+    }
+    let stream: MediaStream | null = null;
+    try {
+      // Intentar con cámara trasera primero
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+    } catch {
+      try {
+        // Fallback: cualquier cámara disponible
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      } catch (err: unknown) {
+        if (err instanceof DOMException) {
+          if (err.name === 'NotAllowedError') {
+            setError('Permiso de cámara denegado. Habilitalo en la configuración del navegador.');
+          } else if (err.name === 'NotFoundError') {
+            setError('No se encontró ninguna cámara en este dispositivo.');
+          } else {
+            setError(`No se pudo acceder a la cámara: ${err.message}`);
+          }
+        } else {
+          setError('No se pudo acceder a la cámara.');
+        }
+        return;
+      }
+    }
+    streamRef.current = stream;
+    setShowCamera(true);
   };
 
   const capturePhoto = () => {
@@ -152,9 +179,9 @@ export default function App() {
         const imageData = canvasRef.current.toDataURL('image/jpeg', 0.8);
         setCapturedImage(imageData);
         setShowCamera(false);
-        if (videoRef.current.srcObject) {
-          const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
-          tracks.forEach(track => track.stop());
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach(track => track.stop());
+          streamRef.current = null;
         }
       }
     }
@@ -626,6 +653,7 @@ export default function App() {
                     playsInline
                     className="w-full rounded-xl border-2 border-caceres-blue"
                   />
+                  <canvas ref={canvasRef} className="hidden" />
                   <button
                     onClick={capturePhoto}
                     className="w-full bg-caceres-red text-white font-bold text-lg py-3 rounded-xl hover:shadow-lg transition-shadow"
